@@ -15,16 +15,19 @@
   },
   "dependencies": {
     "axios": "0.18.0",
-    "chinese2pinyin": "^1.0.1",
     "element-ui": "2.4.6",
+    "font-awesome": "4.7.0",
+    "github-markdown-css": "^2.10.0",
+    "highlight.js": "^9.13.0",
     "js-cookie": "2.2.0",
     "normalize.css": "7.0.0",
     "nprogress": "0.2.0",
+    "simplemde": "1.11.2",
+    "simplemde-theme-base": "^0.2.1",
     "vue": "2.5.17",
     "vue-router": "3.0.1",
-    "vuex": "3.0.1",
-    "simplemde": "1.11.2",
-    "font-awesome": "4.7.0"
+    "vue-simplemde": "^0.4.8",
+    "vuex": "3.0.1"
   },
   "devDependencies": {
     "autoprefixer": "8.5.0",

@@ -32,7 +32,7 @@
         <template slot-scope="scope">
           <el-button-group>
             <el-button size="mini" plain icon="el-icon-edit" type="primary" @click="edit(scope.row)"/>
-            <el-button size="mini" type="warning" plain @click="remove(scope.row)"><svg-icon icon-class="edit" /></el-button>
+            <el-button size="mini" type="danger" plain icon="el-icon-delete" @click="remove(scope.row)"/>
           </el-button-group>
         </template>
       </el-table-column>
@@ -41,7 +41,7 @@
 </template>
 
 <script>
-import { getList } from '@/api/article-type'
+import { getTypes } from '@/api/article-type'
 
 export default {
   filters: {
@@ -74,7 +74,7 @@ export default {
   methods: {
     fetchData() {
       this.listLoading = true
-      getList(this.listQuery).then(response => {
+      getTypes(this.listQuery).then(response => {
         this.list = response.types
         this.listLoading = false
       })
@@ -83,7 +83,7 @@ export default {
       console.log(param)
     },
     edit(param) {
-      this.$router.push({ name: 'type-edit', params: { name: param.Name }})
+      this.$router.push({ name: 'article-type-edit', params: { name: param.Name }})
     }
   }
 }

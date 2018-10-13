@@ -16,7 +16,7 @@ export function editType(typeName, data) {
   })
 }
 
-export function getList(params) {
+export function getTypes(params) {
   return request({
     url: '/article-types',
     method: 'get',
