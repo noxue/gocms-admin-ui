@@ -30,3 +30,10 @@ export function getType(typeName) {
     method: 'get'
   })
 }
+
+export function deleteType(typeName) {
+  return request({
+    url: '/article-type/' + typeName,
+    method: 'delete'
+  })
+}

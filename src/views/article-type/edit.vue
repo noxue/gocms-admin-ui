@@ -50,7 +50,6 @@ export default {
       return
     }
     this.typeName = this.$route.params.name
-    console.log(this.typeName)
     if (this.typeName !== '') {
       this.loadType(this.typeName)
     }
@@ -69,6 +68,7 @@ export default {
             message: '编辑成功',
             type: 'success'
           })
+          this.$router.push({ name: 'article-types' })
         })
         return
       }
@@ -78,6 +78,7 @@ export default {
           message: '添加成功',
           type: 'success'
         })
+        this.$router.push({ name: 'article-types' })
       })
     },
     translate() {

@@ -1,27 +1,27 @@
 <template>
   <div class="app-container">
     <el-form ref="form" :model="article" label-width="100px">
-      <el-form-item label="文章名称">
+      <el-form-item label="标题">
         <el-input v-model="article.Title" @blur="translate()"/>
       </el-form-item>
-      <el-form-item label="文章URL">
+      <el-form-item label="URL">
         <el-input v-model="article.Name"/>
       </el-form-item>
-      <el-form-item label="文章作者">
+      <el-form-item label="作者">
         <el-input v-model="article.Author"/>
       </el-form-item>
-      <el-form-item label="文章分类">
+      <el-form-item v-if="!isAddChapter" label="分类">
         <el-select v-model="article.Type" :remote-method="getTypes" filterable remote placeholder="选择分类">
-          <el-option v-for="(item,index) in types" :key="item.Name+index" :label="item.Title" :value="item.Name"/>
+          <el-option v-for="(item,index) in types" :selected="article.Type===item.Name" :key="item.Name+index" :label="item.Title" :value="item.Name"/>
         </el-select>
       </el-form-item>
-      <el-form-item label="文章内容">
+      <el-form-item label="内容">
         <markdown-editor v-model="article.Content" :highlight="true"/>
       </el-form-item>
       <el-form-item label="排序编号">
         <el-input v-model="article.Sort" type="number"/>
       </el-form-item>
-      <el-form-item label="文章标签">
+      <el-form-item label="标签">
         <el-tag
           v-for="tag in article.Tags"
           :key="tag"
@@ -66,7 +66,7 @@ window.hljs = hljs
 
 import { Title2Url } from '@/api/title2url'
 import { getTypes } from '@/api/article-type'
-import { addArticle } from '@/api/article'
+import { addArticle, addChapter, getArticle, getChapter, editChapter, editArticle } from '@/api/article'
 export default {
   name: 'Article',
   components: {
@@ -74,8 +74,12 @@ export default {
   },
   data() {
     return {
+      isAddChapter: false,
+      isEditArticle: false,
       types: [],
       articleName: '',
+      parentName: '',
+      typeName: '',
       tag: {
         inputVisible: false,
         inputValue: ''
@@ -100,13 +104,35 @@ export default {
     }
   },
   mounted() {
+    const action = this.$route.query.action
+    if (action === 'add_chapter') {
+      this.isAddChapter = true
+      this.article.Type = this.$route.query.type
+    } else if (action === 'edit_article') {
+      this.isEditArticle = true
+    }
+    this.articleName = this.$route.query.article
+    this.parentName = this.$route.query.parent
+    this.typeName = this.$route.query.type
     this.getTypes()
+    if (!this.isAddChapter && this.articleName && this.articleName !== '') {
+      this.fetchArticle()
+    }
   },
   destroyed() {
-    this.simplemde.toTextArea()
-    this.simplemde = null
   },
   methods: {
+    fetchArticle() {
+      if (this.parentName && this.parentName !== '') {
+        getChapter(this.typeName, this.parentName, this.articleName).then(res => {
+          this.article = res.article
+        })
+      } else {
+        getArticle(this.typeName, this.articleName).then(res => {
+          this.article = res.article
+        })
+      }
+    },
     translate() {
       var newV = this.article.Title
       newV = newV.replace(/(\s*)/g, '')
@@ -118,9 +144,44 @@ export default {
       })
     },
     onSubmit() {
-      addArticle(this.article).then(res => {
-        console.log(res)
-      })
+      if (this.isEditArticle) {
+        if (this.parentName && this.parentName !== '') {
+          editChapter(this.typeName, this.parentName, this.articleName, this.article).then(res => {
+            this.$message({
+              message: '章节编辑成功',
+              type: 'success'
+            })
+            this.$router.push({ path: '/article/index', query: { type: this.typeName, article: this.parentName }})
+          })
+          return
+        }
+        editArticle(this.typeName, this.articleName, this.article).then(res => {
+          this.$message({
+            message: '文章编辑成功',
+            type: 'success'
+          })
+          this.$router.push({ name: 'articles' })
+        })
+        return
+      }
+
+      if (this.isAddChapter) {
+        addChapter(this.articleName, this.article).then(res => {
+          this.$message({
+            message: '添加章节成功',
+            type: 'success'
+          })
+          this.$router.push({ name: 'articles' })
+        })
+      } else {
+        addArticle(this.article).then(res => {
+          this.$message({
+            message: '添加文章成功',
+            type: 'success'
+          })
+          this.$router.push({ name: 'articles' })
+        })
+      }
     },
     getTypes() {
       getTypes().then(response => {

@@ -3,6 +3,7 @@
     <el-table
       v-loading="listLoading"
       :data="list"
+      empty-text="分类列表为空，请添加分类"
       element-loading-text="Loading"
       border
       fit
@@ -32,7 +33,7 @@
         <template slot-scope="scope">
           <el-button-group>
             <el-button size="mini" plain icon="el-icon-edit" type="primary" @click="edit(scope.row)"/>
-            <el-button size="mini" type="danger" plain icon="el-icon-delete" @click="remove(scope.row)"/>
+            <el-button size="mini" type="danger" plain icon="el-icon-delete" @click="removeType(scope.row)"/>
           </el-button-group>
         </template>
       </el-table-column>
@@ -41,7 +42,7 @@
 </template>
 
 <script>
-import { getTypes } from '@/api/article-type'
+import { getTypes, deleteType } from '@/api/article-type'
 
 export default {
   filters: {
@@ -79,8 +80,25 @@ export default {
         this.listLoading = false
       })
     },
-    remove(param) {
-      console.log(param)
+    removeType(type) {
+      this.$confirm('此操作将删除该分类以及分类下的所有文章, 无法找回，是否继续?', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        deleteType(type.Name).then(res => {
+          this.$message({
+            type: 'success',
+            message: '删除成功!'
+          })
+          this.fetchData()
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        })
+      })
     },
     edit(param) {
       this.$router.push({ name: 'article-type-edit', params: { name: param.Name }})
