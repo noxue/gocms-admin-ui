@@ -16,7 +16,22 @@
         </el-select>
       </el-form-item>
       <el-form-item label="内容">
-        <markdown-editor v-model="article.Content" :highlight="true"/>
+        <markdown-editor v-model="article.Content" :configs="configs" :highlight="true"/>
+      </el-form-item>
+      <el-form-item class="upload" label="文件上传">
+        <el-upload
+          ref="upload"
+          :data="file"
+          :thumbnail-mode="false"
+          :on-success="handleSuccess"
+          :before-upload="beforeUpload"
+          :show-file-list="false"
+          drag
+          action="https://up.qiniup.com">
+          <i ref="uploadBtn" class="el-icon-upload"/>
+          <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+          <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过2MB</div>
+        </el-upload>
       </el-form-item>
       <el-form-item label="排序编号">
         <el-input v-model="article.Sort" type="number"/>
@@ -61,12 +76,29 @@ import 'simplemde/dist/simplemde.min.css'
 /* Highlight theme list: https://github.com/isagalaev/highlight.js/tree/master/src/styles */
 import 'highlight.js/styles/github.css'
 import markdownEditor from 'vue-simplemde/src/markdown-editor'
+import SimpleMDE from 'simplemde'
 import hljs from 'highlight.js'
 window.hljs = hljs
 
 import { Title2Url } from '@/api/title2url'
 import { getTypes } from '@/api/article-type'
 import { addArticle, addChapter, getArticle, getChapter, editChapter, editArticle } from '@/api/article'
+import { getToken } from '@/api/qiniu'
+
+var that = null
+var Editor = null
+
+function insertText(text) {
+  var cm = Editor.codemirror
+  var startPoint = cm.getCursor('start')
+  var endPoint = cm.getCursor('end')
+  cm.replaceRange(text, {
+    line: startPoint.line,
+    ch: endPoint.ch
+  })
+  cm.focus()
+}
+
 export default {
   name: 'Article',
   components: {
@@ -74,6 +106,10 @@ export default {
   },
   data() {
     return {
+      file: {
+        token: '',
+        key: ''
+      },
       isAddChapter: false,
       isEditArticle: false,
       types: [],
@@ -94,6 +130,173 @@ export default {
         Sort: 0,
         Prev: '',
         Next: ''
+      },
+      configs: {
+        toolbar: [{
+          name: 'bold',
+          action: SimpleMDE.toggleBold,
+          className: 'fa fa-bold',
+          title: 'Bold',
+          default: true
+        },
+        {
+          name: 'italic',
+          action: SimpleMDE.toggleItalic,
+          className: 'fa fa-italic',
+          title: 'Italic',
+          default: true
+        },
+        {
+          name: 'strikethrough',
+          action: SimpleMDE.toggleStrikethrough,
+          className: 'fa fa-strikethrough',
+          title: 'Strikethrough'
+        },
+        {
+          name: 'heading',
+          action: SimpleMDE.toggleHeadingSmaller,
+          className: 'fa fa-header',
+          title: 'Heading',
+          default: true
+        },
+        {
+          name: 'heading-smaller',
+          action: SimpleMDE.toggleHeadingSmaller,
+          className: 'fa fa-header fa-header-x fa-header-smaller',
+          title: 'Smaller Heading'
+        },
+        {
+          name: 'heading-bigger',
+          action: SimpleMDE.toggleHeadingBigger,
+          className: 'fa fa-header fa-header-x fa-header-bigger',
+          title: 'Bigger Heading'
+        },
+        {
+          name: 'heading-1',
+          action: SimpleMDE.toggleHeading1,
+          className: 'fa fa-header fa-header-x fa-header-1',
+          title: 'Big Heading'
+        },
+        {
+          name: 'heading-2',
+          action: SimpleMDE.toggleHeading2,
+          className: 'fa fa-header fa-header-x fa-header-2',
+          title: 'Medium Heading'
+        },
+        {
+          name: 'heading-3',
+          action: SimpleMDE.toggleHeading3,
+          className: 'fa fa-header fa-header-x fa-header-3',
+          title: 'Small Heading'
+        },
+        {
+          name: 'code',
+          action: SimpleMDE.toggleCodeBlock,
+          className: 'fa fa-code',
+          title: 'Code'
+        },
+        {
+          name: 'quote',
+          action: SimpleMDE.toggleBlockquote,
+          className: 'fa fa-quote-left',
+          title: 'Quote',
+          default: true
+        },
+        {
+          name: 'unordered-list',
+          action: SimpleMDE.toggleUnorderedList,
+          className: 'fa fa-list-ul',
+          title: 'Generic List',
+          default: true
+        },
+        {
+          name: 'ordered-list',
+          action: SimpleMDE.toggleOrderedList,
+          className: 'fa fa-list-ol',
+          title: 'Numbered List',
+          default: true
+        },
+        {
+          name: 'clean-block',
+          action: SimpleMDE.cleanBlock,
+          className: 'fa fa-eraser fa-clean-block',
+          title: 'Clean block'
+        },
+        {
+          name: 'link',
+          action: SimpleMDE.drawLink,
+          className: 'fa fa-link',
+          title: 'Create Link',
+          default: true
+        },
+        {
+          name: 'image',
+          action: SimpleMDE.drawImage,
+          className: 'fa fa-picture-o',
+          title: 'Insert Image',
+          default: true
+        },
+        {
+          name: 'upload',
+          action: function(editor) {
+            Editor = editor
+            that.submitUpload()
+          },
+          className: 'fa fa-upload',
+          title: '上传文件'
+        },
+        {
+          name: 'table',
+          action: SimpleMDE.drawTable,
+          className: 'fa fa-table',
+          title: 'Insert Table'
+        },
+        {
+          name: 'horizontal-rule',
+          action: SimpleMDE.drawHorizontalRule,
+          className: 'fa fa-minus',
+          title: 'Insert Horizontal Line'
+        },
+        {
+          name: 'preview',
+          action: SimpleMDE.togglePreview,
+          className: 'fa fa-eye no-disable',
+          title: 'Toggle Preview',
+          default: true
+        },
+        {
+          name: 'side-by-side',
+          action: SimpleMDE.toggleSideBySide,
+          className: 'fa fa-columns no-disable no-mobile',
+          title: 'Toggle Side by Side',
+          default: true
+        },
+        {
+          name: 'fullscreen',
+          action: SimpleMDE.toggleFullScreen,
+          className: 'fa fa-arrows-alt no-disable no-mobile',
+          title: 'Toggle Fullscreen',
+          default: true
+        },
+        {
+          name: 'guide',
+          action: 'https://simplemde.com/markdown-guide',
+          className: 'fa fa-question-circle',
+          title: 'Markdown Guide',
+          default: true
+        },
+        {
+          name: 'undo',
+          action: SimpleMDE.undo,
+          className: 'fa fa-undo no-disable',
+          title: 'Undo'
+        },
+        {
+          name: 'redo',
+          action: SimpleMDE.redo,
+          className: 'fa fa-repeat no-disable',
+          title: 'Redo'
+        }]
       }
     }
   },
@@ -102,6 +305,9 @@ export default {
       var num = parseInt(n)
       this.article.Sort = isNaN(num) ? 0 : num
     }
+  },
+  created() {
+    that = this
   },
   mounted() {
     const action = this.$route.query.action
@@ -204,6 +410,21 @@ export default {
       }
       this.tag.inputVisible = false
       this.tag.inputValue = ''
+    },
+    beforeUpload(file) {
+      return getToken(file.name, 'article').then(res => {
+        this.file.key = res.path
+        this.file.token = res.token
+      })
+    },
+    handleSuccess(response, file, fileList) {
+      const key = response.data.path
+      const name = response.data.name
+      const img = `![${name}](http://static.noxue.com/${encodeURI(key)})`
+      insertText(img)
+    },
+    submitUpload() {
+      this.$refs.uploadBtn.click()
     }
   }
 }
@@ -224,5 +445,8 @@ export default {
     width: 90px;
     margin-left: 10px;
     vertical-align: bottom;
+  }
+  .upload{
+    display: none;
   }
 </style>
