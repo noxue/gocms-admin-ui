@@ -28,7 +28,7 @@ export const constantRouterMap = [
   {
     path: '/',
     component: Layout,
-    redirect: '/articles',
+    redirect: '/article/index',
     name: 'index',
     hidden: true
   },
