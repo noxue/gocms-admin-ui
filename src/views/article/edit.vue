@@ -420,8 +420,16 @@ export default {
     handleSuccess(response, file, fileList) {
       const key = response.data.path
       const name = response.data.name
-      const img = `![${name}](http://static.noxue.com/${encodeURI(key)})`
-      insertText(img)
+      var index1 = key.lastIndexOf('.')
+      var index2 = key.length
+      var suffix = key.substring(index1 + 1, index2)
+      var content = ''
+      if (['jpg', 'jpeg', 'png', 'gif', 'bmp'].indexOf(suffix) >= 0) {
+        content = `![${name}](http://static.noxue.com/${encodeURI(key)})`
+      } else {
+        content = `[${name}](http://static.noxue.com/${encodeURI(key)})`
+      }
+      insertText(content)
     },
     submitUpload() {
       this.$refs.uploadBtn.click()
