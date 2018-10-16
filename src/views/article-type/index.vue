@@ -23,6 +23,11 @@
           <span>{{ scope.row.Name }}</span>
         </template>
       </el-table-column>
+      <el-table-column label="排序编号" align="center">
+        <template slot-scope="scope">
+          <span>{{ scope.row.Sort }}</span>
+        </template>
+      </el-table-column>
       <el-table-column align="center" prop="createdat" label="添加时间">
         <template slot-scope="scope">
           <i class="el-icon-time"/>
@@ -75,7 +80,7 @@ export default {
   methods: {
     fetchData() {
       this.listLoading = true
-      getTypes(this.listQuery).then(response => {
+      getTypes({ 'order': 'asc', 'sortby': 'sort' }).then(response => {
         this.list = response.types
         this.listLoading = false
       })

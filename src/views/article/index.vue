@@ -37,6 +37,11 @@
           <span>{{ scope.row.Name }}</span>
         </template>
       </el-table-column>
+      <el-table-column label="排序编号">
+        <template slot-scope="scope">
+          <span>{{ scope.row.Sort }}</span>
+        </template>
+      </el-table-column>
       <el-table-column prop="createdat" label="添加时间">
         <template slot-scope="scope">
           <i class="el-icon-time"/>
@@ -96,6 +101,8 @@ export default {
         type: '',
         page: 1,
         word: '',
+        'order': 'asc',
+        'sortby': 'sort',
         article: '' // use to get chapters
       }
     }
